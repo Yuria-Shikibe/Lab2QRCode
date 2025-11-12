@@ -34,7 +34,6 @@ BarcodeWidget::BarcodeWidget(QWidget* parent)
 {
     setWindowTitle("Binary to QRCode Generator");
     setMinimumSize(500, 500);
-    setFixedSize(500, 500);
 
     auto* mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(20);  // 调整控件之间的间距
