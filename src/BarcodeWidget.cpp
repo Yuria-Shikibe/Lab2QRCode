@@ -247,48 +247,84 @@ void BarcodeWidget::onGenerateClicked()
         return;
     }
 
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::critical(this, "错误", "不能打开文件.");
-        return;
-    }
+    const auto reqWidth = widthInput->text().toInt();
+    const auto reqHeight = heightInput->text().toInt();
+    const auto useBase64 = base64CheckBox->isChecked();
+    const auto format = currentBarcodeFormat;
 
-    const QByteArray data = file.readAll();
-    file.close();
+    // 设置 UI 忙碌状态
+    this->setCursor(Qt::WaitCursor);
+    generateButton->setEnabled(false);
+    saveButton->setEnabled(false); // 生成期间禁止保存
 
-    try {
-        // 是否base64处理通过判断base64CheckBox
-        std::string text;
-        if(base64CheckBox->isChecked()){
-            text = SimpleBase64::encode(reinterpret_cast<const std::uint8_t*>(data.constData()), data.size());
-        }else{
-            text = data.toStdString();
+    auto* watcher = new QFutureWatcher<QPair<QImage, QString>>(this);
+
+    connect(watcher, &QFutureWatcher<QPair<QImage, QString>>::finished, [this, watcher, reqWidth, reqHeight]() {
+        this->setCursor(Qt::ArrowCursor);
+        generateButton->setEnabled(true);
+
+        const auto result = watcher->result();
+        const QImage& img = result.first;
+
+        if (const QString& errorMsg = result.second; !errorMsg.isEmpty()) {
+            QMessageBox::critical(this, "错误", "不能打开文件.");
+            barcodeLabel->clear();
         }
 
-        ZXing::MultiFormatWriter writer(currentBarcodeFormat);
-        writer.setMargin(1);
+        else if (!img.isNull()) {
+            lastImage = img;
+            barcodeLabel->clear();
+            barcodeLabel->setAlignment(Qt::AlignCenter);
+            barcodeLabel->setPixmap(QPixmap::fromImage(lastImage).scaled(
+                reqWidth, reqHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            saveButton->setEnabled(true);
+        }
 
-        // 界面用户输入
-        const auto bitMatrix = writer.encode(text, widthInput->text().toInt(), heightInput->text().toInt());
-        const int width = bitMatrix.width();
-        const int height = bitMatrix.height();
-        cv::Mat img(height, width, CV_8UC1);
+        watcher->deleteLater();
+    });
 
-        for (int y = 0; y < height; ++y)
-            for (int x = 0; x < width; ++x)
-                img.at<uint8_t>(y, x) = bitMatrix.get(x, y) ? 0 : 255;
+    QFuture<QPair<QImage, QString>> future = QtConcurrent::run([filePath, useBase64, format, reqWidth, reqHeight]() -> QPair<QImage, QString> {
+        try {
+            QFile file(filePath);
+            if (!file.open(QIODevice::ReadOnly)) {
+                return {QImage(), QString("无法打开文件: %1").arg(filePath)};
+            }
 
-        lastImage = MatToQImage(img);
-        barcodeLabel->clear();
-        barcodeLabel->setAlignment(Qt::AlignCenter); // 重新设置居中
-        const int genW = widthInput->text().toInt();
-        const int genH = heightInput->text().toInt();
-        barcodeLabel->setPixmap(QPixmap::fromImage(lastImage).scaled(genW, genH, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        saveButton->setEnabled(true);
-    }
-    catch (const std::exception& e) {
-        QMessageBox::critical(this, "Error", QString("Failed to generate %1:\n%2").arg(barcodeFormatToString(currentBarcodeFormat),e.what()));
-    }
+            const QByteArray data = file.readAll();
+            file.close();
+
+            // 是否base64处理通过判断base64CheckBox
+            std::string text;
+            if (useBase64) {
+                text = SimpleBase64::encode(reinterpret_cast<const std::uint8_t*>(data.constData()), data.size());
+            } else {
+                text = data.toStdString();
+            }
+
+            ZXing::MultiFormatWriter writer(format);
+            writer.setMargin(1);
+
+            const auto bitMatrix = writer.encode(text, reqWidth, reqHeight);
+            const int width = bitMatrix.width();
+            const int height = bitMatrix.height();
+
+            cv::Mat img(height, width, CV_8UC1);
+            for (int y = 0; y < height; ++y){
+                for (int x = 0; x < width; ++x){
+                    img.at<std::uint8_t>(y, x) = bitMatrix.get(x, y) ? 0 : std::numeric_limits<std::uint8_t>::max();
+                }
+            }
+
+            QImage qImg(img.data, img.cols, img.rows, img.step, QImage::Format_Grayscale8);
+
+            return {qImg.copy(), QString()};
+
+        }catch (const std::exception& e) {
+            return {QImage(), QString("生成失败:\n%1").arg(e.what())};
+        }
+    });
+
+    watcher->setFuture(future);
 }
 
 void BarcodeWidget::onDecodeToChemFileClicked()
