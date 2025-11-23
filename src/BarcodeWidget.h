@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <QWidget>
 #include <ZXing/BarcodeFormat.h>
 #include <opencv2/opencv.hpp>
 #include <qfuturewatcher.h>
