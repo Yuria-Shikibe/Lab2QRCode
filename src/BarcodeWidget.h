@@ -2,9 +2,14 @@
 
 #include <QWidget>
 #include <QImage>
+#include <QProgressBar>
+#include <qfuturewatcher.h>
 #include <opencv2/opencv.hpp>
 #include <ZXing/BarcodeFormat.h>
+
+#include "convert.h"
 #include "mqtt/mqtt_client.h"
+#include "vector"
 
 class QLineEdit;
 class QPushButton;
@@ -122,15 +127,26 @@ private:
     QPushButton* generateButton;   /**< 生成二维码按钮 */
     QPushButton* decodeToChemFile; /**< 解码并保存为化验文件按钮 */
     QPushButton* saveButton;       /**< 保存二维码图片按钮 */
-    QLabel* barcodeLabel;          /**< 用于显示生成的二维码图像或解码文本的标签 */
-    QImage lastImage;              /**< 存储最后生成的二维码图像 */
-    QByteArray lastDecodedData;    /**< 保存解码后的数据 */
+
+    // QLabel* barcodeLabel;          /**< 用于显示生成的二维码图像或解码文本的标签 */
+    QProgressBar* progressBar;
+    std::vector<convert::result_data_entry> lastResults; /**< 上次解码产生的结果 */
+
+    // QImage lastImage;              /**< 存储最后生成的二维码图像 */
+    // QByteArray lastDecodedData;    /**< 保存解码后的数据 */
+
     QScrollArea* scrollArea;       /**< 滚动区域 */
+
     QCheckBox* base64CheckBox;     /**< 是否使用base64 */
     QComboBox* formatComboBox;     /**< 条码格式选择框 */
+    QCheckBox* enableBatchCheckBox;  /**< 是否启用批处理 */
+
     ZXing::BarcodeFormat currentBarcodeFormat = ZXing::BarcodeFormat::QRCode;  /**< 当前选择的条码格式  */
     QLineEdit* widthInput;        /**< 图片宽度输入框  */
     QLineEdit* heightInput;       /**< 图片高度输入框  */
     QFileDialog* fileDialog;      /**< 文件选择弹窗    */
     std::unique_ptr<MqttSubscriber> subscriber_;  /**< MQTT 订阅者实例  */
+
+    void renderResults() const;
+    void onBatchFinish(QFutureWatcher<convert::result_data_entry>& watcher);
 };

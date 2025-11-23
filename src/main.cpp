@@ -1,6 +1,7 @@
 #include "BarcodeWidget.h"
 #include <QApplication>
 #include "logging.h"
+#include "convert.h"
 
 int main(int argc, char* argv[])
 {
