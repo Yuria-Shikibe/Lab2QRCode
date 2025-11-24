@@ -62,6 +62,14 @@ private:
     };
 
 signals:
+    /**
+     * @brief MQTT 消息接收信号
+     * @param topic 接收到消息的主题(Topic)路径
+     * @param payload 消息的有效载荷内容，通常为JSON格式或字符串数据
+     *
+     * @details
+     * 当客户端订阅的 MQTT 主题有消息到达时，会触发此信号。
+     */
     void mqttMessageReceived(const QString& topic, const QString& payload);
 
 private slots:
@@ -78,12 +86,12 @@ private slots:
     void onBrowseFile() const;
 
     /**
-     * @brief 根据调用 onBrowseFile 选择的文件、文件夹生成条码并显示。
+     * @brief 成条码并显示。
      */
     void onGenerateClicked();
 
     /**
-     * @brief 解码条码。
+     * @brief 解码条码并显示。
      */
     void onDecodeToChemFileClicked();
 
@@ -96,6 +104,22 @@ private slots:
      * @brief 显示关于软件的信息对话框。
      */
     void showAbout() const;
+
+    /**
+     * @brief 将 OpenCV 中的 Mat 对象转换为 QImage 格式。
+     */
+    QImage MatToQImage(const cv::Mat& mat) const;
+
+    /**
+    * @brief 渲染并显示结果
+    */
+    void renderResults() const;
+
+    /**
+    * @brief 批处理完成回调函数
+    * @param watcher 异步任务监视器
+    */
+    void onBatchFinish(QFutureWatcher<convert::result_data_entry>& watcher);
 
     /**
      * @brief 将条码格式枚举转换为字符串表示。
@@ -113,13 +137,7 @@ private slots:
      */
     static ZXing::BarcodeFormat stringToBarcodeFormat(const QString& formatStr);
 
-    static cv::Mat loadImageFromFile(const QString& filePath);
-
 private:
-    /**
-     * @brief 将 OpenCV 中的 Mat 对象转换为 QImage 格式。
-     */
-    QImage MatToQImage(const cv::Mat& mat) const;
 
     QLineEdit*                              filePathEdit;        /**< 文件路径输入框，用于显示选择的文件路径 */
     QPushButton*                            generateButton;      /**< 生成条码按钮 */
@@ -136,15 +154,4 @@ private:
     QLineEdit*                      heightInput;                                         /**< 图片高度输入框  */
     QFileDialog*                    fileDialog;                                          /**< 文件选择弹窗    */
     std::unique_ptr<MqttSubscriber> subscriber_;                                         /**< MQTT 订阅者实例  */
-
-    /**
-    * @brief 渲染并显示结果
-    */
-    void renderResults() const;
-
-    /**
-    * @brief 批处理完成回调函数
-    * @param watcher 异步任务监视器
-    */
-    void onBatchFinish(QFutureWatcher<convert::result_data_entry>& watcher);
 };
