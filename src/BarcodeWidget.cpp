@@ -740,13 +740,13 @@ void BarcodeWidget::renderResults() const {
                 typeLabel->setStyleSheet("border: none; background: transparent; font-size: 12px; font-weight: bold;");
 
                 if (isImage) {
-                    typeLabel->setText("[待生成]");
+                    typeLabel->setText("[待解码]");
                     typeLabel->setStyleSheet(typeLabel->styleSheet() + "color: #67C23A;"); // 橙色提示解码
                 } else if (isText) {
-                    typeLabel->setText("[待解码]");
+                    typeLabel->setText("[待生成]");
                     typeLabel->setStyleSheet(typeLabel->styleSheet() + "color: #67C23A;"); // 绿色提示生成
                 } else {
-                    typeLabel->setText("[默认为文本]");
+                    typeLabel->setText("[不确定类型，默认待生成]");
                     typeLabel->setStyleSheet(typeLabel->styleSheet() + "color: #E6A23C;");
                 }
 
