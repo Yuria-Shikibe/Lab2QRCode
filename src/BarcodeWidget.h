@@ -76,9 +76,8 @@ private slots:
     /**
      * @brief 更新按钮状态，是否可点击
      *
-     * @param filePath 当前选择的文件路径。
      */
-    void updateButtonStates(const QString& filePath) const;
+    void updateButtonStates() const;
 
     /**
      * @brief 打开文件浏览器并选择一个文件、文件夹，在文本框显示选择的路径。
@@ -139,6 +138,8 @@ private slots:
 
 private:
 
+    QStringList lastSelectedFiles;
+
     QLineEdit*                              filePathEdit;        /**< 文件路径输入框，用于显示选择的文件路径 */
     QPushButton*                            generateButton;      /**< 生成条码按钮 */
     QPushButton*                            decodeToChemFile;    /**< 解码并保存为化验文件按钮 */
@@ -148,7 +149,6 @@ private:
     QScrollArea*                            scrollArea;          /**< 滚动区域 */
     QCheckBox*                              base64CheckBox;      /**< 是否使用base64 */
     QComboBox*                              formatComboBox;      /**< 条码格式选择框 */
-    QCheckBox*                              enableBatchCheckBox; /**< 是否启用批处理 */
     ZXing::BarcodeFormat            currentBarcodeFormat = ZXing::BarcodeFormat::QRCode; /**< 当前选择的条码格式  */
     QLineEdit*                      widthInput;                                          /**< 图片宽度输入框  */
     QLineEdit*                      heightInput;                                         /**< 图片高度输入框  */
