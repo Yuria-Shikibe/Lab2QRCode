@@ -573,10 +573,10 @@ void BarcodeWidget::onDecodeToChemFileClicked() {
             try {
                 const auto bytes = path.toLocal8Bit().toStdString();
                 switch (auto rst = convert::QRcode_to_byte(bytes); rst.err) {
-                case convert::result_i2t::invalid_qrcode:
-                    spdlog::error("loadImageFromFile 无法加载图片文件: {}", path.toStdString());
-                    return {std::move(path), QString{"无法加载图片文件: %1"}.arg(path).toStdString()};
                 case convert::result_i2t::empty_img:
+                    spdlog::error("cv::imread 无法加载图片文件: {}", path.toStdString());
+                    return {std::move(path), QString{"无法加载图片文件: %1"}.arg(path).toStdString()};
+                case convert::result_i2t::invalid_qrcode:
                     return {std::move(path), std::string{"无法识别条码或条码格式不正确"}};
                 default:
                     std::vector<std::uint8_t> decodedData;
