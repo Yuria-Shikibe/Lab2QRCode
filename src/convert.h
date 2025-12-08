@@ -16,7 +16,12 @@
 #include <ZXing/ImageView.h>
 #include <ZXing/MultiFormatWriter.h>
 #include <ZXing/ReadBarcode.h>
+#include <opencv2/opencv.hpp>
 
+/**
+ * @namespace convert
+ * @brief 提供二维码生成和解析的转换功能（摄像头识别与此无关）
+ */
 namespace convert{
     struct result_data_entry {
         using variant_t = std::variant<std::monostate, QImage, QByteArray, std::string>;
@@ -117,8 +122,8 @@ namespace convert{
         }
     };
 
-    [[nodiscard]] inline result_i2t QRcode_to_byte(const std::string& bytes){
-        cv::Mat img = cv::imread(bytes, cv::IMREAD_COLOR);
+    [[nodiscard]] inline result_i2t QRcode_to_byte(const std::string& file_path){
+        const cv::Mat img = cv::imread(file_path, cv::IMREAD_COLOR);
         if (img.empty()) {
             return result_i2t::empty_img;
         }
