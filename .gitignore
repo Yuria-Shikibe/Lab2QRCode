@@ -1,7 +1,8 @@
-build/
-.vs/
+/build
+/.vs
+/.cache
+/.vscode
+/out
 CMakePresets.json
 CMakeUserPresets.json
-.cache
-.vscode
 version.cpp
